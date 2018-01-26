@@ -1,5 +1,5 @@
-#!/usr/bin/ruby
 
+#!/usr/bin/ruby
 ###############################################################
 #
 # CSCI 305 - Ruby Programming Lab
@@ -10,29 +10,28 @@
 ###############################################################
 
 $bigrams = Hash.new # The Bigram data structure
+$bigramsArray = Hash.new
 $name = "Zachariah Fahsi"
 $total = 0
 # function to process each line of a file and extract the song titles
 def process_file(file_name)
 	puts "Processing File.... "
+
 	begin
-		all = {}
+		all = Hash.new
 		IO.foreach(file_name) do |line|
 			# do something for each line
 			title = cleanup_title(line)
 			unless title.nil?
 				gram = title.split().each_cons(2).to_a
 				gram = gram.map{ |n| n.join(' ') }
-  				gram = gram.each_with_object(Hash.new(0)) { |word, obj| obj[word.downcase] += 1 }
+  				gram = gram.each_with_object(Hash.new(0)) { |word, obj| obj[word] += 1 }
   				if gram.any?
 	  				all.merge!(gram) { |k, old, new| old + new }
 	  			end
 			end
-			if $total==-20
-				break
-			end
 		end
-		$bigrams = all.sort_by { |k, v| -v }
+		$bigramsArray = all.sort_by { |k, v| -v }
 		puts "Finished. Bigram model built.\n"
 	rescue
 		STDERR.puts "Could not open file"
@@ -41,18 +40,26 @@ def process_file(file_name)
 end
 
 def cleanup_title(title)
-	title.sub!(/^[^_]*<SEP>/, '')
-	title.sub!(/\(.*$|\[.*$|\{.*$|\\.*$|\/.*$|\-.*$|\:.*$|\".*$|\`.*$|\+.*$|\=.*$|\*.*$|feat\..*$/, '')
+	#title.sub!(/^[^_]*<SEP>/, '')
+	#title.sub!(/\(.*$|\[.*$|\{.*$|\\.*$|\/.*$|\-.*$|\:.*$|\".*$|\`.*$|\+.*$|\=.*$|\*.*$|feat\..*$/, '')
+	#title.sub!(/[?¿!¡\.;&@%#\|]/, '')
+	#title.downcase!
+	#if ( title =~ /^[\w\s\d']+$/ )
+	#   	$total=$total+1
+	#   	title
+	#end	
+	title.sub!(/%\w*<SEP>\w*<SEP>.*<SEP>/, '')
+	title.sub!(/\(.*|{.*|\[.*|\\.*|\/.*|_.*|-.*|`.*|\+.*|=.*|\*.*|feat..*|:.*|".*/, '')
 	title.sub!(/[?¿!¡\.;&@%#\|]/, '')
+	if !(title =~ /^[\w\s\d']+$/)
+		title.clear
+	end
 	title.downcase!
-	if ( title =~ /^[\w\s\d']+$/ )
-	   	$total=$total+1
-	   	title
-	end	
+	title	
 end
 
 def mcw(word)
-	$bigrams.each do |search| 
+	$bigramsArray.each do |search| 
 		find = "#{search[0].split.first}" 
 		if word == find
 			return search[0].split.last
@@ -63,7 +70,7 @@ end
 
 def allWords(word)
 	count = 0
-	$bigrams.each do |search| 
+	$bigramsArray.each do |search| 
 		find = "#{search[0].split.first}" 
 		if word == find
 			puts "#{search}"
@@ -71,6 +78,31 @@ def allWords(word)
 		end
 	end
 	puts "#{count}"
+end
+
+def create_title(word)
+	count = 0
+	create = mcw(word)
+	newTitle = word
+	while (count<19 && create != "No Matches")
+		newTitle = newTitle + " " + create
+		create = mcw(create)
+		count = count + 1
+	end
+	newTitle
+end
+
+def create_hash()
+	$bigramsArray.each do |search| 
+		first = "#{search[0].split.first}" 
+		last  = "#{search[0].split.last}" 
+		value = "#{search[1]}"
+		if $bigrams["#{first}"]
+			$bigrams["#{first}"].merge!({last => value})
+		else
+			$bigrams.merge!(first => {last => value})
+		end
+	end
 end
 
 # Executes the program
@@ -84,19 +116,24 @@ def main_loop()
 
 	# process the file
 	process_file(ARGV[0])
-
+	create_hash()
+	puts $bigrams["love"]["song"]
+	#puts $bigramsArray.inspect
 	# Get user input
-	#puts "#{$total}"
 	while true
 		puts "Enter a word [Enter 'q' to quit]:"
 		word = STDIN.gets.sub!(/[^\w]+$/,'')
 		if word == "q"
+	#		#puts "#{$bigrams.size}"
 			break
 		end
-		#common = mcw(word)
-		#puts "#{common}"
-		allWords(word)
+		common = mcw(word)
+		puts "#{common}"
+	#	allWords(word)
+	#	#puts "#{create_title(word)}"
 	end
 end
 
-main_loop()
+if __FILE__==$0
+	main_loop()
+end
