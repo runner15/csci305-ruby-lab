@@ -32,6 +32,7 @@ def process_file(file_name)
 			end
 		end
 		$bigramsArray = all.sort_by { |k, v| -v }
+		create_hash()
 		puts "Finished. Bigram model built.\n"
 	rescue
 		STDERR.puts "Could not open file"
@@ -40,22 +41,14 @@ def process_file(file_name)
 end
 
 def cleanup_title(title)
-	#title.sub!(/^[^_]*<SEP>/, '')
-	#title.sub!(/\(.*$|\[.*$|\{.*$|\\.*$|\/.*$|\-.*$|\:.*$|\".*$|\`.*$|\+.*$|\=.*$|\*.*$|feat\..*$/, '')
-	#title.sub!(/[?¿!¡\.;&@%#\|]/, '')
-	#title.downcase!
-	#if ( title =~ /^[\w\s\d']+$/ )
-	#   	$total=$total+1
-	#   	title
-	#end	
-	title.sub!(/%\w*<SEP>\w*<SEP>.*<SEP>/, '')
-	title.sub!(/\(.*|{.*|\[.*|\\.*|\/.*|_.*|-.*|`.*|\+.*|=.*|\*.*|feat..*|:.*|".*/, '')
-	title.sub!(/[?¿!¡\.;&@%#\|]/, '')
-	if !(title =~ /^[\w\s\d']+$/)
-		title.clear
-	end
-	title.downcase!
-	title	
+	title.gsub!(/.*(?<=>)/, '')
+	title.gsub!(/\(.*|{.*|\[.*|\\.*|\/.*|_.*|-.*|`.*|\+.*|=.*|\*.*|feat..*|:.*|".*/, '')
+	title.gsub!(/[?!¿¡\.;&@%#\|]/, '')
+  	if !(title =~ /^[\w\s\d']+$/)
+    	title.clear
+  	end
+  	title.downcase!
+  	title
 end
 
 def mcw(word)
@@ -65,7 +58,7 @@ def mcw(word)
 			return search[0].split.last
 		end
 	end
-	return "No Matches!"
+	""
 end
 
 def allWords(word)
@@ -96,7 +89,7 @@ def create_hash()
 	$bigramsArray.each do |search| 
 		first = "#{search[0].split.first}" 
 		last  = "#{search[0].split.last}" 
-		value = "#{search[1]}"
+		value = "#{search[1]}".to_i
 		if $bigrams["#{first}"]
 			$bigrams["#{first}"].merge!({last => value})
 		else
@@ -116,22 +109,20 @@ def main_loop()
 
 	# process the file
 	process_file(ARGV[0])
-	create_hash()
 	puts $bigrams["love"]["song"]
-	#puts $bigramsArray.inspect
 	# Get user input
-	while true
-		puts "Enter a word [Enter 'q' to quit]:"
-		word = STDIN.gets.sub!(/[^\w]+$/,'')
-		if word == "q"
+	#while true
+	#	puts "Enter a word [Enter 'q' to quit]:"
+	#	word = STDIN.gets.sub!(/[^\w]+$/,'')
+	#	if word == "q"
 	#		#puts "#{$bigrams.size}"
-			break
-		end
-		common = mcw(word)
-		puts "#{common}"
+	#		break
+	#	end
+	#	common = mcw(word)
+	#	puts "#{common}"
 	#	allWords(word)
-	#	#puts "#{create_title(word)}"
-	end
+	#	puts "#{create_title(word)}"
+	#end
 end
 
 if __FILE__==$0
