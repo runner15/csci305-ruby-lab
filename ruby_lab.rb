@@ -48,6 +48,7 @@ def cleanup_title(title)
     	title.clear
   	end
   	title.downcase!
+  	title.gsub!(/\b(a|an|and|by|for|from|in|of|on|or|out|the|to|with)\b/,'')
   	title
 end
 
@@ -77,10 +78,15 @@ def create_title(word)
 	count = 0
 	create = mcw(word)
 	newTitle = word
-	while (count<19 && create != "No Matches")
+	#while (count<19 && create != "No Matches")
+	#	newTitle = newTitle + " " + create
+	#	create = mcw(create)
+	#	count = count + 1
+	#end
+	while true
+		break if newTitle.include? create
 		newTitle = newTitle + " " + create
 		create = mcw(create)
-		count = count + 1
 	end
 	newTitle
 end
@@ -109,20 +115,19 @@ def main_loop()
 
 	# process the file
 	process_file(ARGV[0])
-	puts $bigrams["love"]["song"]
 	# Get user input
-	#while true
-	#	puts "Enter a word [Enter 'q' to quit]:"
-	#	word = STDIN.gets.sub!(/[^\w]+$/,'')
-	#	if word == "q"
-	#		#puts "#{$bigrams.size}"
-	#		break
-	#	end
+	while true
+		puts "Enter a word [Enter 'q' to quit]:"
+		word = STDIN.gets.sub!(/[^\w]+$/,'')
+		if word == "q"
+			#puts "#{$bigrams.size}"
+			break
+		end
 	#	common = mcw(word)
 	#	puts "#{common}"
 	#	allWords(word)
-	#	puts "#{create_title(word)}"
-	#end
+		puts "#{create_title(word)}"
+	end
 end
 
 if __FILE__==$0
